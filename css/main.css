@@ -1,0 +1,206 @@
+:root {
+    --bg-dark: #0a0a0f;
+    --bg-card: rgba(20, 20, 30, 0.8);
+    --primary: #00f2ff;
+    --secondary: #7000ff;
+    --accent: #ff007a;
+    --text: #e0e0e0;
+    --gold: #ffd700;
+    --glow-primary: 0 0 10px rgba(0, 242, 255, 0.5);
+    --glow-secondary: 0 0 10px rgba(112, 0, 255, 0.5);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background: url('../img/bg.png') no-repeat center center;
+    background-size: cover;
+}
+
+#game-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+#ui-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+#ui-overlay>* {
+    pointer-events: auto;
+}
+
+#currency-display {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--bg-card);
+    padding: 10px 20px;
+    border-radius: 12px;
+    border: 1px solid var(--primary);
+    box-shadow: var(--glow-primary);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.2rem;
+}
+
+#currency-display .label {
+    color: var(--gold);
+    margin-right: 10px;
+}
+
+#controls {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+}
+
+.primary-btn,
+.secondary-btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.primary-btn {
+    background: linear-gradient(45deg, var(--primary), var(--secondary));
+    color: white;
+    box-shadow: var(--glow-primary);
+}
+
+.primary-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px var(--primary);
+}
+
+.primary-btn:active {
+    transform: scale(0.95);
+}
+
+.secondary-btn {
+    background: var(--bg-card);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+}
+
+.secondary-btn:hover {
+    background: rgba(0, 242, 255, 0.1);
+    transform: translateY(-5px);
+}
+
+#upgrade-menu {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    max-height: 80vh;
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border: 2px solid var(--secondary);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: var(--glow-secondary);
+    display: flex;
+    flex-direction: column;
+    transition: opacity 0.3s ease;
+}
+
+.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    font-family: 'Orbitron', sans-serif;
+}
+
+#close-menu {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.upgrade-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+.upgrade-item:hover {
+    border-color: var(--primary);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.upgrade-info h3 {
+    font-size: 0.9rem;
+    color: var(--primary);
+    margin-bottom: 4px;
+}
+
+.upgrade-info p {
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+.buy-btn {
+    background: var(--secondary);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.buy-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
