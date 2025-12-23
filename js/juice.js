@@ -16,12 +16,13 @@ const Juice = {
     },
 
     createCollisionParticles(x, y, color = 0xffffff) {
-        const count = 15 + Math.random() * 10;
+        if (this.particles.length > 300) return; // Cap particles at 300
+        const count = 10;
         for (let i = 0; i < count; i++) {
             const p = new PIXI.Graphics();
             const pColor = Math.random() > 0.5 ? 0xffffff : 0x00f2ff;
             p.beginFill(pColor);
-            p.drawCircle(0, 0, 1.5 + Math.random() * 2);
+            p.drawCircle(0, 0, 1 + Math.random() * 2);
             p.endFill();
 
             p.x = x;
@@ -29,10 +30,10 @@ const Juice = {
 
             const particle = {
                 sprite: p,
-                vx: (Math.random() - 0.5) * 12,
-                vy: (Math.random() - 0.5) * 12,
+                vx: (Math.random() - 0.5) * 8,
+                vy: (Math.random() - 0.5) * 8,
                 life: 1.0,
-                decay: 0.02 + Math.random() * 0.04
+                decay: 0.05 + Math.random() * 0.05
             };
 
             Renderer.gameLayer.addChild(p);
@@ -41,17 +42,14 @@ const Juice = {
     },
 
     createScorePopup(x, y, text) {
+        if (this.popups.length > 50) return; // Cap popups at 50
         const style = new PIXI.TextStyle({
             fontFamily: 'Orbitron',
-            fontSize: 22,
+            fontSize: 20,
             fontWeight: 'bold',
-            fill: ['#ffffff', '#00f2ff'], // Divine gradient
+            fill: ['#ffffff', '#00f2ff'],
             stroke: '#050a15',
-            strokeThickness: 5,
-            dropShadow: true,
-            dropShadowColor: '#00f2ff',
-            dropShadowBlur: 8,
-            dropShadowDistance: 0
+            strokeThickness: 4,
         });
 
         const popup = new PIXI.Text(text, style);

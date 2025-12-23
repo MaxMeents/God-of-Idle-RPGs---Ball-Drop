@@ -15,10 +15,20 @@ const UI = {
         this.upgradeMenu = document.getElementById('upgrade-menu');
         this.menuList = document.querySelector('.upgrade-list');
 
+        this.initEvents();
+
+        this.renderUpgrades();
+        this.updateGold(0);
+
+        console.log("UI System Initialized");
+    },
+
+    initEvents() {
         const dropBtn = document.getElementById('drop-ball-btn');
         if (dropBtn) {
+            dropBtn.innerHTML = 'DIVINE DROP <span style="font-size: 0.6em; opacity: 0.7;">(100 ORBS)</span>';
             dropBtn.addEventListener('click', () => {
-                Physics.spawnBall();
+                Physics.spawnBallTriangle(100);
             });
         }
 
@@ -36,10 +46,20 @@ const UI = {
             });
         }
 
-        this.renderUpgrades();
-        this.updateGold(0);
-
-        console.log("UI System Initialized");
+        // Auto-drop interval
+        setInterval(() => {
+            const swarmUpg = this.upgrades.find(u => u.id === 'ball_count'); // Corrected ID to 'ball_count'
+            if (swarmUpg.level > 0) {
+                // At higher levels, spawn small triangles for swarm
+                if (swarmUpg.level > 5) {
+                    Physics.spawnBallTriangle(5 + Math.floor(swarmUpg.level / 2));
+                } else {
+                    for (let i = 0; i < swarmUpg.level; i++) {
+                        Physics.spawnBall();
+                    }
+                }
+            }
+        }, 1000);
     },
 
     updateGold(amount) {

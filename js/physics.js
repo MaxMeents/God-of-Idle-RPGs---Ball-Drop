@@ -1,5 +1,5 @@
 /**
- * Physics.js - Celestial Divine Pachinko (Massive Pin Density)
+ * Physics.js - Optimized Matter.js for 10,000+ balls
  */
 
 const Physics = {
@@ -14,7 +14,12 @@ const Physics = {
 
         this.engine = Engine.create();
         this.world = this.engine.world;
-        this.world.gravity.y = 1.0; // Divine gravity
+        this.world.gravity.y = 1.0;
+
+        // PERFORMANCE: Tune Engine
+        this.engine.positionIterations = 2; // Default 6
+        this.engine.velocityIterations = 2; // Default 4
+        this.engine.enableSleeping = true; // Essential for high count
 
         this.setupArena();
 
@@ -22,6 +27,8 @@ const Physics = {
         Matter.Runner.run(runner, this.engine);
 
         Matter.Events.on(this.engine, 'collisionStart', (event) => {
+            // Rate limit collision effects for better performance
+            if (Math.random() > 0.1) return;
             event.pairs.forEach((pair) => {
                 this.handleCollision(pair);
             });
@@ -39,55 +46,45 @@ const Physics = {
         const rightWall = Bodies.rectangle(width + wallThickness / 2, height / 2, wallThickness, height, { isStatic: true });
         Composite.add(this.world, [leftWall, rightWall]);
 
-        // DIVINE PIN FIELD: 10x Density
-        // Old was 12 rows, let's go for much more and tighter spacing
+        // Massive Pin Field
         const rows = 35;
-        const pinRadius = 2.5; // Smaller pins for higher density
-        const pinSpacingX = width / 40; // Tight X
-        const pinSpacingY = height / 50; // Tight Y
+        const pinRadius = 2.0;
+        const pinSpacingX = width / 45;
+        const pinSpacingY = height / 55;
         const startY = height * 0.15;
 
         for (let r = 0; r < rows; r++) {
-            const isEven = r % 2 === 0;
-            const pinsInRow = 30 + (isEven ? 1 : 0);
+            const pinsInRow = 35 + (r % 2 === 0 ? 1 : 0);
             const rowWidth = pinsInRow * pinSpacingX;
             const startX = (width - rowWidth) / 2 + pinSpacingX / 2;
 
             for (let c = 0; c < pinsInRow; c++) {
                 const px = startX + c * pinSpacingX;
                 const py = startY + r * pinSpacingY;
-
-                // Keep some padding from walls to avoid clogging
                 if (px < 20 || px > width - 20) continue;
 
-                const color = Math.random() > 0.5 ? 0x00f2ff : 0xffffff;
                 const pin = Bodies.circle(px, py, pinRadius, {
                     isStatic: true,
                     label: 'pin',
-                    restitution: 0.8
+                    restitution: 0.6
                 });
                 this.pins.push(pin);
                 Composite.add(this.world, pin);
-                Renderer.createCircleSprite(pin, pinRadius, color);
+                Renderer.createCircleSprite(pin, pinRadius, 0x00f2ff, false);
             }
         }
 
-        // Divine Slots
-        const slotCount = 15;
+        // Slots
+        const slotCount = 18;
         const slotWidth = width / slotCount;
         for (let i = 0; i < slotCount; i++) {
             const sx = i * slotWidth + slotWidth / 2;
-            const divider = Bodies.rectangle(i * slotWidth, height - 25, 6, 150, {
-                isStatic: true,
-                label: 'divider'
-            });
+            const divider = Bodies.rectangle(i * slotWidth, height - 25, 4, 150, { isStatic: true });
             Composite.add(this.world, divider);
-            Renderer.createRectSprite(divider, 6, 150, 0xffd700);
+            Renderer.createRectSprite(divider, 4, 150, 0xffffff);
 
-            const sensor = Bodies.rectangle(sx, height - 10, slotWidth - 5, 30, {
-                isSensor: true,
-                isStatic: true,
-                label: `slot_${i}`
+            const sensor = Bodies.rectangle(sx, height - 10, slotWidth - 2, 30, {
+                isSensor: true, isStatic: true, label: `slot_${i}`
             });
             this.slots.push(sensor);
             Composite.add(this.world, sensor);
@@ -95,19 +92,45 @@ const Physics = {
     },
 
     spawnBall() {
+        this.spawnBallTriangle(100); // Trigger 100 balls on single click/auto
+    },
+
+    spawnBallTriangle(total = 100) {
         const { Bodies, Composite } = Matter;
         const width = document.getElementById('game-container').clientWidth;
-        const x = width / 2 + (Math.random() - 0.5) * 60;
+        const centerX = width / 2;
+        const ballRadius = 5.5;
+        const spacing = ballRadius * 2.2;
 
-        const ball = Bodies.circle(x, -50, 7, {
-            restitution: 0.7,
-            friction: 0.001,
-            label: 'ball'
-        });
+        // Calculate number of rows for a triangle
+        // n*(n+1)/2 = 100 -> n^2 + n - 200 = 0 -> n approx 13.6
+        const rows = 13;
+        let spawned = 0;
 
-        this.balls.push(ball);
-        Composite.add(this.world, ball);
-        Renderer.createCircleSprite(ball, 7, 0xffffff); // Divine White Orbs
+        for (let r = 0; r < rows; r++) {
+            const ballsInRow = r + 1;
+            const rowWidth = ballsInRow * spacing;
+            const startX = centerX - rowWidth / 2 + spacing / 2;
+
+            for (let c = 0; c < ballsInRow; c++) {
+                if (spawned >= total) break;
+
+                const x = startX + c * spacing;
+                const y = -150 - r * spacing;
+
+                const ball = Bodies.circle(x, y, ballRadius, {
+                    restitution: 0.5,
+                    friction: 0.001,
+                    label: 'ball',
+                    density: 0.001
+                });
+
+                this.balls.push(ball);
+                Composite.add(this.world, ball);
+                Renderer.createCircleSprite(ball, ballRadius, 0xffffff, true);
+                spawned++;
+            }
+        }
     },
 
     handleCollision(pair) {
@@ -116,9 +139,12 @@ const Physics = {
         if ((bodyA.label === 'ball' && bodyB.label === 'pin') ||
             (bodyA.label === 'pin' && bodyB.label === 'ball')) {
             const ball = bodyA.label === 'ball' ? bodyA : bodyB;
-            Juice.screenShake(0.3);
-            Juice.createCollisionParticles(ball.position.x, ball.position.y, 0xffffff);
-            Renderer.createPulse(ball.position.x, ball.position.y, 0x00f2ff);
+
+            // Extreme Throttling of VFX for 10k balls
+            if (this.balls.length < 500) {
+                Juice.createCollisionParticles(ball.position.x, ball.position.y);
+                Renderer.createPulse(ball.position.x, ball.position.y, 0x00f2ff);
+            }
 
             const pinUpg = UI.upgrades.find(u => u.id === 'pin_mult');
             if (pinUpg.level > 0) UI.updateGold(pinUpg.level * 0.1);
@@ -131,10 +157,10 @@ const Physics = {
             const slotIndex = parseInt(slot.label.split('_')[1]);
             const goldEarned = UI.handleScore(slotIndex);
 
-            Juice.createCollisionParticles(ball.position.x, ball.position.y, 0xffd700);
-            Juice.createScorePopup(ball.position.x, ball.position.y, `+${goldEarned.toFixed(1)}`);
-            Juice.screenShake(4);
-            Renderer.createPulse(ball.position.x, ball.position.y, 0xffffff);
+            if (this.balls.length < 500) {
+                Juice.createScorePopup(ball.position.x, ball.position.y, `+${goldEarned.toFixed(1)}`);
+                Renderer.createPulse(ball.position.x, ball.position.y, 0xffffff);
+            }
 
             this.removeBall(ball);
         }
