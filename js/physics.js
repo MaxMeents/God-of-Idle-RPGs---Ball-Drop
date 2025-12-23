@@ -1,38 +1,22 @@
 /**
- * Physics.js - Matter.js World Setup
+ * Physics.js - Matter.js World Setup (without internal renderer)
  */
 
 const Physics = {
     engine: null,
-    render: null,
     world: null,
     pins: [],
     slots: [],
     balls: [],
 
     init() {
-        const { Engine, Render, World, Bodies, Composite } = Matter;
+        const { Engine, World, Bodies, Composite } = Matter;
 
         this.engine = Engine.create();
         this.world = this.engine.world;
 
-        const canvas = document.getElementById('game-canvas');
-        const container = document.getElementById('game-container');
-
-        this.render = Render.create({
-            canvas: canvas,
-            engine: this.engine,
-            options: {
-                width: container.clientWidth,
-                height: container.clientHeight,
-                wireframes: false,
-                background: 'transparent'
-            }
-        });
-
         this.setupArena();
 
-        Render.run(this.render);
         const runner = Matter.Runner.create();
         Matter.Runner.run(runner, this.engine);
 
@@ -46,8 +30,9 @@ const Physics = {
 
     setupArena() {
         const { Bodies, Composite } = Matter;
-        const width = this.render.options.width;
-        const height = this.render.options.height;
+        const container = document.getElementById('game-container');
+        const width = container.clientWidth;
+        const height = container.clientHeight;
 
         // Walls
         const wallThickness = 50;
@@ -56,7 +41,7 @@ const Physics = {
 
         Composite.add(this.world, [leftWall, rightWall]);
 
-        // Pins (Galton Board style)
+        // Pins
         const rows = 12;
         const pinSpacingX = width / 14;
         const pinSpacingY = height / 20;
@@ -70,35 +55,35 @@ const Physics = {
                 const px = startX + c * pinSpacingX;
                 const py = startY + r * pinSpacingY;
 
+                const color = (r + c) % 2 === 0 ? 0x00f2ff : 0xff007a;
                 const pin = Bodies.circle(px, py, 4, {
                     isStatic: true,
-                    render: { fillStyle: '#ffffff' },
                     label: 'pin'
                 });
                 this.pins.push(pin);
                 Composite.add(this.world, pin);
+
+                // Create Pixi Sprite with neon color
+                Renderer.createCircleSprite(pin, 4, color);
             }
         }
 
         // Slots
         const slotCount = 13;
         const slotWidth = width / slotCount;
-        const slotY = height - 40;
 
         for (let i = 0; i < slotCount; i++) {
             const sx = i * slotWidth + slotWidth / 2;
-            // Visible slot dividers
-            const divider = Bodies.rectangle(i * slotWidth, height - 25, 4, 50, {
+            const divider = Bodies.rectangle(i * slotWidth, height - 25, 4, 100, {
                 isStatic: true,
-                render: { fillStyle: '#7000ff' }
+                label: 'divider'
             });
             Composite.add(this.world, divider);
+            Renderer.createRectSprite(divider, 4, 100, 0x7000ff);
 
-            // Sensors for scoring
             const sensor = Bodies.rectangle(sx, height - 10, slotWidth - 10, 20, {
                 isSensor: true,
                 isStatic: true,
-                render: { visible: false },
                 label: `slot_${i}`
             });
             this.slots.push(sensor);
@@ -108,42 +93,38 @@ const Physics = {
 
     spawnBall() {
         const { Bodies, Composite } = Matter;
-        const width = this.render.options.width;
-        const x = width / 2 + (Math.random() - 0.5) * 50;
+        const container = document.getElementById('game-container');
+        const width = container.clientWidth;
+        const x = width / 2 + (Math.random() - 0.5) * 40;
 
         const ball = Bodies.circle(x, -20, 10, {
-            restitution: 0.5,
-            friction: 0.1,
-            render: {
-                fillStyle: '#00f2ff',
-                strokeStyle: '#ffffff',
-                lineWidth: 2
-            },
+            restitution: 0.6,
+            friction: 0.05,
             label: 'ball'
         });
 
         this.balls.push(ball);
         Composite.add(this.world, ball);
+
+        // Create Pixi Sprite
+        Renderer.createCircleSprite(ball, 10, 0x00f2ff);
     },
 
     handleCollision(pair) {
         const { bodyA, bodyB } = pair;
 
-        // Ball hits pin
         if ((bodyA.label === 'ball' && bodyB.label === 'pin') ||
             (bodyA.label === 'pin' && bodyB.label === 'ball')) {
             const ball = bodyA.label === 'ball' ? bodyA : bodyB;
             Juice.screenShake(0.5);
-            Juice.createCollisionParticles(ball.position.x, ball.position.y, '#ffffff');
+            Juice.createCollisionParticles(ball.position.x, ball.position.y, 0xffffff);
 
-            // UI gold bonus for pin hit if upgraded
             const pinUpg = UI.upgrades.find(u => u.id === 'pin_mult');
             if (pinUpg.level > 0) {
                 UI.updateGold(pinUpg.level * 0.1);
             }
         }
 
-        // Ball hits slot sensor
         const ball = bodyA.label === 'ball' ? bodyA : (bodyB.label === 'ball' ? bodyB : null);
         const slot = bodyA.label.startsWith('slot_') ? bodyA : (bodyB.label.startsWith('slot_') ? bodyB : null);
 
@@ -151,14 +132,19 @@ const Physics = {
             const slotIndex = parseInt(slot.label.split('_')[1]);
             const goldEarned = UI.handleScore(slotIndex);
 
-            Juice.createCollisionParticles(ball.position.x, ball.position.y, '#ffd700');
+            Juice.createCollisionParticles(ball.position.x, ball.position.y, 0xffd700);
             Juice.createScorePopup(ball.position.x, ball.position.y, `+${goldEarned.toFixed(1)}`);
             Juice.screenShake(3);
 
-            // Remove ball from world and array
-            Matter.Composite.remove(this.world, ball);
-            this.balls = this.balls.filter(b => b !== ball);
+            // Cleanup
+            this.removeBall(ball);
         }
+    },
+
+    removeBall(ball) {
+        Matter.Composite.remove(this.world, ball);
+        this.balls = this.balls.filter(b => b !== ball);
+        Renderer.removeSprite(ball.id);
     }
 };
 

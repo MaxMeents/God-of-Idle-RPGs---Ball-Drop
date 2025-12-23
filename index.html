@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,19 +8,23 @@
     <link rel="stylesheet" href="css/main.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700&family=Orbitron:wght@400;700&display=swap"
+        rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.3.2/pixi.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pixi-filters@5.3.0/dist/pixi-filters.js"></script>
 </head>
+
 <body>
     <div id="game-container">
-        <canvas id="game-canvas"></canvas>
-        
+        <!-- PixiJS will append its canvas here -->
+
         <div id="ui-overlay">
             <div id="currency-display">
                 <span class="label">GOLD:</span>
                 <span id="gold-amount">0</span>
             </div>
-            
+
             <div id="upgrade-menu" class="hidden">
                 <div class="menu-header">
                     <h2>UPGRADES</h2>
@@ -29,7 +34,7 @@
                     <!-- Upgrades will be populated here -->
                 </div>
             </div>
-            
+
             <div id="controls">
                 <button id="drop-ball-btn" class="primary-btn">DROP BALL</button>
                 <button id="menu-toggle-btn" class="secondary-btn">UPGRADES</button>
@@ -38,9 +43,11 @@
     </div>
 
     <!-- Scripts -->
+    <script src="js/renderer.js"></script>
     <script src="js/juice.js"></script>
     <script src="js/physics.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/game.js"></script>
 </body>
+
 </html>
