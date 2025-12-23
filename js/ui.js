@@ -14,13 +14,39 @@ const UI = {
         this.tooltip = document.getElementById('juice-tooltip');
         this.artifactSlots = document.getElementById('artifact-slots');
 
+        // Infinite Notation Configuration
+        this.baseSuffixes = ["", "k", "m", "b", "t", "q", "Q", "s", "S", "o", "n", "d"];
+
         this.defineUpgrades();
         this.initEvents();
         this.renderUpgrades();
         this.updateGold(0);
         this.renderArtifacts();
 
-        console.log("God-Tier UI Initialized");
+        console.log("God-Tier UI Initialized (Infinite Edition)");
+    },
+
+    formatNumber(num) {
+        if (num < 1000) return Math.floor(num).toString();
+        const exp = Math.floor(Math.log10(num) / 3);
+        const suffix = this.getSuffix(exp);
+        const shortVal = num / Math.pow(10, exp * 3);
+        return shortVal.toFixed(2) + suffix;
+    },
+
+    getSuffix(exp) {
+        if (exp < this.baseSuffixes.length) return this.baseSuffixes[exp];
+
+        // Multi-letter suffixes: aa, ab, ..., zz, aaa...
+        let e = exp - this.baseSuffixes.length;
+        let suffix = "";
+        const letters = "abcdefghijklmnopqrstuvwxyz";
+
+        while (e >= 0) {
+            suffix = letters[e % 26] + suffix;
+            e = Math.floor(e / 26) - 1;
+        }
+        return suffix;
     },
 
     defineUpgrades() {
@@ -75,6 +101,31 @@ const UI = {
         document.getElementById('close-panel').addEventListener('click', () => {
             this.upgradePanel.classList.add('hidden');
         });
+
+        // Add event listeners for upgrade items to show/hide tooltip
+        this.itemsContainer.addEventListener('mouseover', (e) => {
+            const item = e.target.closest('.upgrade-item');
+            if (item) {
+                const upgradeId = item.dataset.upgradeId; // Assuming you add data-upgrade-id to items
+                const upg = this.upgrades.find(u => u.id === upgradeId);
+                if (upg && this.tooltip) {
+                    document.getElementById('tooltip-name').innerText = upg.name;
+                    document.getElementById('tooltip-desc').innerText = upg.desc;
+                    document.getElementById('tooltip-level').innerText = `LVL ${upg.level}`;
+                    document.getElementById('tooltip-cost').innerText = `${this.formatNumber(upg.cost)} G`;
+                    this.tooltip.classList.remove('hidden');
+                    // Position tooltip (example, adjust as needed)
+                    this.tooltip.style.left = `${e.pageX + 10}px`;
+                    this.tooltip.style.top = `${e.pageY + 10}px`;
+                }
+            }
+        });
+
+        this.itemsContainer.addEventListener('mouseout', () => {
+            if (this.tooltip) {
+                this.tooltip.classList.add('hidden');
+            }
+        });
     },
 
     renderUpgrades() {
@@ -82,23 +133,31 @@ const UI = {
         this.upgrades.forEach(upg => {
             const item = document.createElement('div');
             item.className = 'upgrade-item';
+            item.dataset.upgradeId = upg.id; // Add data attribute for tooltip
+            if (this.gold < upg.cost) item.style.opacity = '0.6';
 
-            const icon = document.createElement('span');
-            icon.className = `artifact-icon artifact-${upg.iconType}`;
-            icon.style.setProperty('--a-color', this.getCategoryColor(upg.category, upg.level));
+            const canAfford = this.gold >= upg.cost;
 
             item.innerHTML = `
-                <div class="upgrade-info">
-                    <h3>${upg.name} (LV. ${upg.level})</h3>
+                <div class="upgrade-header">
+                    <span class="artifact-icon artifact-${upg.iconType}" style="--a-color: ${this.getCategoryColor(upg.category, upg.level)}"></span>
+                    <div class="upgrade-info">
+                        <h3>${upg.name}</h3>
+                        <span class="upgrade-category">${upg.category}</span>
+                    </div>
+                </div>
+                <p class="upgrade-desc">${upg.desc}</p>
+                <div class="upgrade-footer">
+                    <div class="upgrade-stats">
+                        <span class="stat-row">LEVEL ${upg.level}</span>
+                    </div>
+                    <button class="buy-btn" ${canAfford ? '' : 'disabled'}>
+                        ${this.formatNumber(upg.cost)} G
+                    </button>
                 </div>
             `;
-            item.prepend(icon);
 
-            // Hyper Juice Hover
-            item.onmouseenter = (e) => this.showTooltip(upg, e);
-            item.onmouseleave = () => this.hideTooltip();
             item.onclick = () => this.buyUpgrade(upg.id);
-
             this.itemsContainer.appendChild(item);
         });
     },
@@ -108,26 +167,11 @@ const UI = {
         return `hsl(${hue}, 80%, 70%)`; // Hundreds of variants by color
     },
 
-    showTooltip(upg, e) {
-        const rect = e.target.getBoundingClientRect();
-        this.tooltip.classList.remove('hidden');
-        this.tooltip.style.top = `${rect.top}px`;
-
-        document.getElementById('tooltip-name').innerText = upg.name;
-        document.getElementById('tooltip-desc').innerText = upg.desc;
-        document.getElementById('tooltip-level').innerText = `LVL ${upg.level}`;
-        document.getElementById('tooltip-cost').innerText = `${upg.cost} G`;
-
-        // Connector logic handled by CSS absolute positioning
-    },
-
-    hideTooltip() {
-        this.tooltip.classList.add('hidden');
-    },
+    // Rollover tooltips removed as per full-detail panel request
 
     updateGold(amount) {
         this.gold += amount;
-        if (this.goldDisplay) this.goldDisplay.innerText = Math.floor(this.gold).toLocaleString();
+        if (this.goldDisplay) this.goldDisplay.innerText = this.formatNumber(this.gold);
 
         // Check for new artifacts every 1000 gold
         if (amount > 0 && Math.random() > 0.95) {
@@ -165,6 +209,7 @@ const UI = {
 
             // Trigger specific gameplay effects (simplified hook)
             this.applyUpgradeEffect(upg);
+            console.log(`Bought ${upg.name}. New Level: ${upg.level}. Cost: ${this.formatNumber(upg.cost)}`);
         }
     },
 
@@ -203,11 +248,14 @@ const UI = {
 
     handleScore(slotIndex) {
         const dist = Math.abs(slotIndex - 9); // middle of 18
-        const baseValue = 10 + (this.getUpgradeLevel('orb_2') * 20);
-        const mult = 1 + (dist * 0.8) * (1 + (this.getUpgradeLevel('force_3') * 0.2));
+        const baseValue = 10 + (this.getUpgradeLevel('orb_2') * 100);
+        const mult = 1 + (dist * 1.5) * (1 + (this.getUpgradeLevel('force_3') * 0.5));
         const added = baseValue * mult;
         this.updateGold(added);
-        return added;
+
+        // Determine Tier (1-26)
+        const tier = Math.min(26, Math.max(1, Math.floor(Math.log10(added))));
+        return { amount: added, tier: tier, formatted: this.formatNumber(added) };
     },
 
     handleCollision() {

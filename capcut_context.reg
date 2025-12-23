@@ -1,0 +1,22 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CURRENT_USER\Software\Classes\.mp4\shell\CapCut]
+@="Open with CapCut"
+"Icon"="\"C:\\Users\\maxme\\AppData\\Local\\CapCut\\Apps\\7.7.0.3143\\CapCut.exe\",0"
+
+[HKEY_CURRENT_USER\Software\Classes\.mp4\shell\CapCut\command]
+@="\"C:\\Users\\maxme\\AppData\\Local\\CapCut\\Apps\\7.7.0.3143\\CapCut.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.mp4\shell\CapCut]
+@="Open with CapCut"
+"Icon"="\"C:\\Users\\maxme\\AppData\\Local\\CapCut\\Apps\\7.7.0.3143\\CapCut.exe\",0"
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.mp4\shell\CapCut\command]
+@="\"C:\\Users\\maxme\\AppData\\Local\\CapCut\\Apps\\7.7.0.3143\\CapCut.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\video\shell\CapCut]
+@="Open with CapCut"
+"Icon"="\"C:\\Users\\maxme\\AppData\\Local\\CapCut\\Apps\\7.7.0.3143\\CapCut.exe\",0"
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\video\shell\CapCut\command]
+@="\"C:\\Users\\maxme\\AppData\\Local\\CapCut\\Apps\\7.7.0.3143\\CapCut.exe\" \"%1\""

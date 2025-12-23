@@ -8,6 +8,7 @@ const Renderer = {
     sprites: new Map(), // body.id -> sprite
     filters: {},
     textures: {},
+    slotSprites: [], // Track slot hit visualizations
 
     async init() {
         const container = document.getElementById('game-container');
@@ -22,6 +23,11 @@ const Renderer = {
             autoDensity: true,
             powerPreference: 'high-performance'
         });
+
+        // Essential for 10k: Sprite Batching (Safety check for v7)
+        if (this.app.renderer.plugins.prepare) {
+            this.app.renderer.plugins.prepare.upload(this.app.stage);
+        }
 
         container.insertBefore(this.app.view, container.firstChild);
 
@@ -76,6 +82,16 @@ const Renderer = {
         ballGfx.drawCircle(0, 0, 10);
         ballGfx.endFill();
         this.textures.ball = this.app.renderer.generateTexture(ballGfx);
+
+        // Generate BitmapFont for high-performance popups
+        PIXI.BitmapFont.from("DivineFont", {
+            fontFamily: 'Orbitron',
+            fontSize: 64,
+            fontWeight: '900',
+            fill: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 4
+        }, { chars: PIXI.BitmapFont.ALPHANUMERIC + '+.,!' });
     },
 
     setupBackground() {
@@ -90,7 +106,7 @@ const Renderer = {
             nebula.beginFill(colors[i % 3], 0.1);
             nebula.drawEllipse(0, 0, 500, 300);
             nebula.endFill();
-            nebula.filters = [new PIXI.filters.BlurFilter(100)];
+            nebula.filters = [new PIXI.BlurFilter(100)];
             nebula.position.set(Math.random() * this.app.screen.width, Math.random() * this.app.screen.height);
             this.bgLayer.addChild(nebula);
             this.nebulae.push({
@@ -106,18 +122,34 @@ const Renderer = {
     },
 
     setupFilters() {
-        // Optimized Bloom
         const Bloom = PIXI.filters.AdvancedBloomFilter || PIXI.filters.BloomFilter;
         if (Bloom) {
             this.filters.bloom = new Bloom({
-                threshold: 0.5,
-                bloomScale: 1.5,
-                brightness: 1.0,
-                blur: 4,
+                threshold: 0.4,
+                bloomScale: 2.0,
+                brightness: 1.2,
+                blur: 3,
                 quality: 3
             });
-            this.gameLayer.filters = [this.filters.bloom];
         }
+
+        // True Hyper Juice: RGBSplit for aberration (v5 filters namespace)
+        const RGBSplit = PIXI.filters.RGBSplitFilter;
+        if (RGBSplit) {
+            this.filters.aberration = new RGBSplit();
+            this.filters.aberration.red = { x: 0, y: 0 };
+            this.filters.aberration.green = { x: 0, y: 0 };
+            this.filters.aberration.blue = { x: 0, y: 0 };
+        } else {
+            console.warn("RGBSplitFilter not found in PIXI.filters. Ensure pixi-filters is loaded correctly.");
+            this.filters.aberration = null;
+        }
+
+        const activeFilters = [];
+        if (this.filters.bloom) activeFilters.push(this.filters.bloom);
+        if (this.filters.aberration) activeFilters.push(this.filters.aberration);
+
+        this.gameLayer.filters = activeFilters;
     },
 
     createCircleSprite(body, radius, color = 0xffffff, isBall = false) {
@@ -138,20 +170,54 @@ const Renderer = {
         return sprite;
     },
 
-    createRectSprite(body, width, height, color = 0xffffff) {
+    createRectSprite(body, width, height, color = 0xffffff, isSlot = false) {
         const graphics = new PIXI.Graphics();
         graphics.beginFill(0xffffff, 0.9);
         graphics.drawRect(-width / 2, -height / 2, width, height);
         graphics.endFill();
         graphics.position.copyFrom(body.position);
         graphics.rotation = body.angle;
-        this.gameLayer.addChild(graphics);
+        graphics.tint = color;
+        if (body.id) graphics.name = body.id;
+
+        if (isSlot) {
+            this.gameLayer.addChildAt(graphics, 0); // Put backgrounds behind
+            this.slotSprites.push({ bodyId: body.id, graphics, life: 0 });
+        } else {
+            this.gameLayer.addChild(graphics);
+        }
+
         this.sprites.set(body.id, graphics);
         return graphics;
     },
 
+    illuminateSlot(index, tier = 1) {
+        // Find the "divider" or region near the slot to glow
+        const tierColors = [0x00f2ff, 0x00ff88, 0xffd700, 0xff00ff, 0xffffff, 0xff4400];
+        const color = tierColors[tier % tierColors.length];
+
+        const targetName = `slot_bg_${index}`;
+        this.slotSprites.forEach(s => {
+            if (s.graphics.name === targetName) {
+                s.graphics.tint = color;
+                s.life = 1.0;
+            }
+        });
+    },
+
     update(bodies) {
         this.updateBackground();
+
+        // Update slot lighting decay
+        this.slotSprites.forEach(s => {
+            if (s.life > 0) {
+                s.life -= 0.05;
+                if (s.life <= 0) {
+                    s.graphics.tint = 0xffffff;
+                    s.life = 0;
+                }
+            }
+        });
 
         // Optimized batch update
         const count = bodies.length;

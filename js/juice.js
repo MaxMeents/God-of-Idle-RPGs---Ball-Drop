@@ -4,15 +4,27 @@
 
 const Juice = {
     shakeIntensity: 0,
+    aberrationIntensity: 0,
+    hitstopFrames: 0,
     particles: [],
     popups: [],
+    popupPool: [], // Pool for BitmapText objects
 
     init() {
-        console.log("Juice System Initialized (PixiJS)");
+        console.log("True Hyper Juice System Initialized");
     },
 
-    screenShake(intensity = 5) {
+    screenShake(intensity = 15) {
         this.shakeIntensity = Math.max(this.shakeIntensity, intensity);
+    },
+
+    hitstop(frames = 5) {
+        this.hitstopFrames = frames;
+        Physics.engine.timing.timeScale = 0.05; // Significant slowdown
+    },
+
+    triggerAberration(intensity = 10) {
+        this.aberrationIntensity = intensity;
     },
 
     createCollisionParticles(x, y, color = 0xffffff) {
@@ -41,39 +53,76 @@ const Juice = {
         }
     },
 
-    createScorePopup(x, y, text) {
-        if (this.popups.length > 50) return; // Cap popups at 50
-        const style = new PIXI.TextStyle({
-            fontFamily: 'Orbitron',
-            fontSize: 20,
-            fontWeight: 'bold',
-            fill: ['#ffffff', '#00f2ff'],
-            stroke: '#050a15',
-            strokeThickness: 4,
-        });
+    createScorePopup(x, y, text, tier = 1) {
+        if (this.popups.length > 500) return; // Support massive amount of popups
 
-        const popup = new PIXI.Text(text, style);
+        let popup;
+        if (this.popupPool.length > 0) {
+            popup = this.popupPool.pop();
+            popup.text = text;
+            popup.visible = true;
+        } else {
+            popup = new PIXI.BitmapText(text, { fontName: "DivineFont", fontSize: 32 });
+            Renderer.uiLayer.addChild(popup);
+        }
+
         popup.anchor.set(0.5);
         popup.position.set(x, y);
 
+        // Map 26 Tiers to Extreme Visuals
+        const tierColors = [
+            0xffffff, 0x00f2ff, 0x00ff88, 0xffd700, 0xff00ff, 0xff4400,
+            0x0088ff, 0xff0066, 0x88ff00, 0x00ffff, 0xffffff, 0xffd700,
+            0xffffff, 0xffd700, 0xff00ff, 0xffffff, 0x00f2ff, 0xffffff,
+            0xff0000, 0xffffff, 0xffffff, 0xffd700, 0x00f2ff, 0xff00ff,
+            0x00f2ff, 0xffffff
+        ];
+
+        popup.tint = tierColors[tier - 1] || 0xffffff;
+        const baseScale = 0.4 + (tier * 0.1);
+        popup.scale.set(baseScale);
+        popup.rotation = (Math.random() - 0.5) * (tier * 0.1);
+        popup.alpha = 1;
+
         const popupObj = {
             sprite: popup,
-            vy: -2,
-            life: 1.0
+            vy: -1.0 - (tier * 0.3), // Fly faster for higher tiers
+            vx: (Math.random() - 0.5) * (tier * 1.0),
+            life: 1.0,
+            decay: 0.015 + (tier * 0.005),
+            tier: tier
         };
 
-        Renderer.uiLayer.addChild(popup);
         this.popups.push(popupObj);
     },
 
     update() {
-        // Screen Shake (Apply to the whole stage container)
+        // Hitstop logic
+        if (this.hitstopFrames > 0) {
+            this.hitstopFrames--;
+            if (this.hitstopFrames <= 0) {
+                Physics.engine.timing.timeScale = 1.0;
+            }
+        }
+
+        // Chromatic Aberration (Apply to Filter in Renderer)
+        if (this.aberrationIntensity > 0) {
+            if (Renderer.filters.aberration) {
+                Renderer.filters.aberration.red.x = (Math.random() - 0.5) * this.aberrationIntensity;
+                Renderer.filters.aberration.red.y = (Math.random() - 0.5) * this.aberrationIntensity;
+                Renderer.filters.aberration.blue.x = (Math.random() - 0.5) * -this.aberrationIntensity;
+            }
+            this.aberrationIntensity *= 0.85;
+            if (this.aberrationIntensity < 0.1) this.aberrationIntensity = 0;
+        }
+
+        // Violent Screen Shake
         if (this.shakeIntensity > 0) {
             const sx = (Math.random() - 0.5) * this.shakeIntensity;
             const sy = (Math.random() - 0.5) * this.shakeIntensity;
             Renderer.app.stage.position.set(sx, sy);
-            this.shakeIntensity *= 0.9;
-            if (this.shakeIntensity < 0.1) {
+            this.shakeIntensity *= 0.92; // Slower decay for more impact
+            if (this.shakeIntensity < 0.5) {
                 this.shakeIntensity = 0;
                 Renderer.app.stage.position.set(0, 0);
             }
@@ -97,17 +146,18 @@ const Juice = {
             }
         }
 
-        // Popups
+        // Popups (Pooled Update)
         for (let i = this.popups.length - 1; i >= 0; i--) {
             const p = this.popups[i];
             p.sprite.y += p.vy;
-            p.life -= 0.02;
+            p.sprite.x += p.vx || 0;
+            p.life -= p.decay;
             p.sprite.alpha = p.life;
-            p.sprite.scale.set(1 + (1 - p.life) * 0.5); // Grow slightly
+            p.sprite.scale.set(p.sprite.scale.x * 1.01); // Subtle grow
 
             if (p.life <= 0) {
-                Renderer.uiLayer.removeChild(p.sprite);
-                p.sprite.destroy();
+                p.sprite.visible = false;
+                this.popupPool.push(p.sprite);
                 this.popups.splice(i, 1);
             }
         }

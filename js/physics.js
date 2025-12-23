@@ -16,10 +16,18 @@ const Physics = {
         this.world = this.engine.world;
         this.world.gravity.y = 1.0;
 
-        // PERFORMANCE: Tune Engine
-        this.engine.positionIterations = 2; // Default 6
-        this.engine.velocityIterations = 2; // Default 4
-        this.engine.enableSleeping = true; // Essential for high count
+        // PERFORMANCE: Ultra-Tune Engine for 10k
+        this.engine.positionIterations = 1;
+        this.engine.velocityIterations = 1;
+        this.engine.constraintIterations = 0;
+        this.engine.enableSleeping = true;
+        this.world.gravity.scale = 0.0015;
+
+        this.COLLISION_GROUPS = {
+            BALL: 0x0001,
+            PIN: 0x0002,
+            SLOT: 0x0004
+        };
 
         this.setupArena();
 
@@ -81,48 +89,58 @@ const Physics = {
             const sx = i * slotWidth + slotWidth / 2;
             const divider = Bodies.rectangle(i * slotWidth, height - 25, 4, 150, { isStatic: true });
             Composite.add(this.world, divider);
-            Renderer.createRectSprite(divider, 4, 150, 0xffffff);
+            Renderer.createRectSprite(divider, 4, 150, 0xffffff, true); // Mark as slot divider
 
-            const sensor = Bodies.rectangle(sx, height - 10, slotWidth - 2, 30, {
-                isSensor: true, isStatic: true, label: `slot_${i}`
+            const sensor = Bodies.rectangle(sx, height - 10, slotWidth - 2, 80, { // Larger sensor
+                isSensor: true, isStatic: true, label: `slot_${i}`,
+                collisionFilter: { mask: this.COLLISION_GROUPS.BALL }
             });
             this.slots.push(sensor);
             Composite.add(this.world, sensor);
+
+            // Radiant Background for Slot
+            Renderer.createRectSprite({ position: { x: sx, y: height - 40 }, id: `slot_bg_${i}`, angle: 0 },
+                slotWidth - 4, 100, 0x0a1525, true); // Mark as slot
         }
     },
 
     spawnBall() {
-        this.spawnBallTriangle(100); // Trigger 100 balls on single click/auto
+        this.spawnBallTriangle(2000); // Trigger massive 2,000 ball drop
     },
 
-    spawnBallTriangle(total = 100) {
+    spawnBallTriangle(total = 2000) {
         const { Bodies, Composite } = Matter;
         const width = document.getElementById('game-container').clientWidth;
         const centerX = width / 2;
-        const ballRadius = 5.5;
-        const spacing = ballRadius * 2.2;
+        const ballRadius = 4.5;
+        const spacing = ballRadius * 2.1;
 
-        // Calculate number of rows for a triangle
-        // n*(n+1)/2 = 100 -> n^2 + n - 200 = 0 -> n approx 13.6
-        const rows = 13;
+        // Rows for ~2000 balls: n(n+1)/2 = 2000 -> n approx 63
+        const rows = 63;
         let spawned = 0;
 
-        for (let r = 0; r < rows; r++) {
-            const ballsInRow = r + 1;
-            const rowWidth = ballsInRow * spacing;
-            const startX = centerX - rowWidth / 2 + spacing / 2;
+        // Cluster spawning in chunks to avoid frame stall
+        const spawnChunk = () => {
+            for (let i = 0; i < 200; i++) { // 200 per frame
+                if (spawned >= total) return;
 
-            for (let c = 0; c < ballsInRow; c++) {
-                if (spawned >= total) break;
+                const r = Math.floor(Math.sqrt(2 * spawned + 0.25) - 0.5);
+                const c = spawned - (r * (r + 1) / 2);
 
-                const x = startX + c * spacing;
-                const y = -150 - r * spacing;
+                const rowWidth = (r + 1) * spacing;
+                const x = centerX - rowWidth / 2 + c * spacing;
+                const y = -100 - r * spacing;
 
                 const ball = Bodies.circle(x, y, ballRadius, {
-                    restitution: 0.5,
-                    friction: 0.001,
+                    restitution: 0.4,
+                    friction: 0.0001,
+                    frictionAir: 0.001,
                     label: 'ball',
-                    density: 0.001
+                    render: { visible: false },
+                    collisionFilter: {
+                        category: this.COLLISION_GROUPS.BALL,
+                        mask: this.COLLISION_GROUPS.PIN | this.COLLISION_GROUPS.SLOT // No BALL mask!
+                    }
                 });
 
                 this.balls.push(ball);
@@ -130,7 +148,9 @@ const Physics = {
                 Renderer.createCircleSprite(ball, ballRadius, 0xffffff, true);
                 spawned++;
             }
-        }
+            if (spawned < total) requestAnimationFrame(spawnChunk);
+        };
+        spawnChunk();
     },
 
     handleCollision(pair) {
@@ -142,6 +162,12 @@ const Physics = {
 
             // Trigger UI logic for pin hit (passive gold)
             UI.handleCollision();
+
+            // True Hyper Juice: Subtle impact
+            if (Math.random() > 0.8) {
+                Juice.screenShake(2);
+                Juice.triggerAberration(3);
+            }
 
             // Extreme Throttling of VFX for 10k balls
             if (this.balls.length < 500) {
@@ -155,10 +181,23 @@ const Physics = {
 
         if (ball && slot) {
             const slotIndex = parseInt(slot.label.split('_')[1]);
-            const goldEarned = UI.handleScore(slotIndex);
+            const scoreData = UI.handleScore(slotIndex); // Now returns {amount, tier, formatted}
 
-            if (this.balls.length < 500) {
-                Juice.createScorePopup(ball.position.x, ball.position.y, `+${Math.floor(goldEarned)}`);
+            // True Hyper Juice: Big Impact
+            if (this.balls.length < 50) { // Only heavy effects at low count
+                Juice.screenShake(10);
+                Juice.triggerAberration(15);
+                Juice.hitstop(8);
+            } else {
+                Juice.screenShake(1); // Subtle shake at high count
+            }
+
+            // Always show popup as requested
+            Juice.createScorePopup(ball.position.x, ball.position.y, `+${scoreData.formatted}`, scoreData.tier);
+
+            // Divine Lighting
+            Renderer.illuminateSlot(slotIndex, scoreData.tier);
+            if (this.balls.length < 1000) {
                 Renderer.createPulse(ball.position.x, ball.position.y, 0xffffff);
             }
 

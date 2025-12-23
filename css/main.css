@@ -8,6 +8,10 @@
     --glow-blue: 0 0 15px rgba(0, 242, 255, 0.6);
     --glow-gold: 0 0 20px rgba(255, 215, 0, 0.4);
     --side-panel-width: 400px;
+
+    /* Hyper Juice Gradients */
+    --grad-divine: linear-gradient(90deg, #00f2ff, #ffffff, #00f2ff);
+    --grad-gold: linear-gradient(90deg, #ffd700, #fff, #ffd700);
 }
 
 * {
@@ -37,36 +41,54 @@ body {
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 10;
+    z-index: 999;
+    /* Absolute Top */
 }
 
 #ui-overlay>* {
     pointer-events: auto;
 }
 
-/* Currency Container */
+/* Currency Container (Top Left) */
 #currency-container {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 25px;
+    left: 25px;
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    gap: 10px;
-    z-index: 100;
+    align-items: flex-start;
+    gap: 15px;
+    z-index: 1000;
 }
 
 #main-gold-display {
     background: var(--panel-bg);
-    padding: 10px 20px;
+    padding: 12px 25px;
     border-radius: 30px;
-    border: 1px solid var(--primary);
-    box-shadow: var(--glow-blue);
+    border: 2px solid var(--primary);
+    box-shadow: var(--glow-blue), inset 0 0 20px rgba(0, 242, 255, 0.2);
     display: flex;
     align-items: center;
     gap: 15px;
     font-family: 'Orbitron', sans-serif;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
+    color: var(--secondary);
+    text-shadow: 0 0 10px var(--primary);
+    animation: pulse-glow 2s infinite ease-in-out;
+}
+
+#gold-amount {
+    color: #fff;
+    /* High contrast white base */
+    background: var(--grad-gold);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% auto;
+    animation: flow-grad 3s linear infinite;
+    font-weight: 900;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.4);
+    filter: brightness(1.5);
 }
 
 #artifact-slots {
@@ -106,7 +128,12 @@ body {
 .panel-header h2 {
     font-family: 'Orbitron', sans-serif;
     letter-spacing: 3px;
-    color: var(--primary);
+    background: var(--grad-divine);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% auto;
+    animation: flow-grad 5s linear infinite;
     font-size: 1.2rem;
 }
 
@@ -126,27 +153,181 @@ body {
 
 .upgrade-item {
     background: rgba(255, 255, 255, 0.03);
-    margin-bottom: 15px;
-    padding: 15px;
-    border-radius: 12px;
+    margin-bottom: 20px;
+    padding: 20px;
+    border-radius: 15px;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.3s;
+    flex-direction: column;
+    gap: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     position: relative;
+    overflow: hidden;
+}
+
+.upgrade-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--primary);
+    opacity: 0.3;
+    transition: opacity 0.3s;
 }
 
 .upgrade-item:hover {
-    background: rgba(0, 242, 255, 0.1);
-    border-color: var(--primary);
+    background: rgba(0, 242, 255, 0.05);
+    border-color: rgba(0, 242, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.upgrade-item:hover::before {
+    opacity: 1;
+    box-shadow: 0 0 15px var(--primary);
+}
+
+.upgrade-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.upgrade-desc {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    opacity: 0.8;
+    color: var(--secondary);
+    padding: 5px 0;
+    animation: flow-opacity 3s infinite ease-in-out;
+}
+
+@keyframes flow-opacity {
+
+    0%,
+    100% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 0.9;
+        text-shadow: 0 0 5px var(--primary);
+    }
+}
+
+.upgrade-info {
+    flex: 1;
 }
 
 .upgrade-info h3 {
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: var(--secondary);
-    margin-bottom: 5px;
+    margin-bottom: 2px;
+    background: var(--grad-divine);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% auto;
+    animation: flow-grad 4s linear infinite;
+    text-transform: uppercase;
+}
+
+.upgrade-category {
+    animation: shimmer 2s infinite;
+}
+
+.stat-row {
+    animation: pulse-simple 1.5s infinite;
+}
+
+.buy-btn {
+    background: #fff;
+    color: #050a15;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 900;
+    cursor: pointer;
+    min-width: 100px;
+    box-shadow: 0 4px 0 #ccc, 0 0 20px rgba(255, 255, 255, 0.4);
+    transition: all 0.1s;
+    text-transform: uppercase;
+}
+
+.buy-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #ccc, 0 0 30px rgba(255, 255, 255, 0.6);
+}
+
+.buy-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 0px 0 #ccc;
+}
+
+.buy-btn:disabled {
+    background: #333;
+    color: #666;
+    box-shadow: none;
+    cursor: not-allowed;
+    filter: grayscale(1);
+}
+
+/* Hyper Juice Animations */
+@keyframes flow-grad {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 200% 50%;
+    }
+}
+
+@keyframes shimmer {
+
+    0%,
+    100% {
+        opacity: 0.5;
+        filter: blur(0px);
+    }
+
+    50% {
+        opacity: 1;
+        filter: blur(0.5px);
+        color: var(--primary);
+    }
+}
+
+@keyframes pulse-glow {
+
+    0%,
+    100% {
+        box-shadow: var(--glow-blue), inset 0 0 20px rgba(0, 242, 255, 0.2);
+    }
+
+    50% {
+        box-shadow: 0 0 30px var(--primary), inset 0 0 40px rgba(0, 242, 255, 0.4);
+        transform: scale(1.02);
+    }
+}
+
+@keyframes pulse-simple {
+
+    0%,
+    100% {
+        opacity: 0.7;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+        color: var(--accent);
+    }
 }
 
 /* Hyper Juice Tooltip */
@@ -214,7 +395,7 @@ body {
 #menu-toggle-btn {
     position: absolute;
     top: 20px;
-    left: 20px;
+    right: 20px;
     z-index: 100;
 }
 
@@ -230,25 +411,37 @@ body {
 .secondary-btn {
     width: 100%;
     padding: 15px;
-    border: 1px solid var(--primary);
+    border: 2px solid var(--primary);
     border-radius: 12px;
     background: var(--panel-bg);
-    color: var(--primary);
+    color: var(--secondary);
     font-family: 'Orbitron', sans-serif;
-    font-weight: bold;
+    font-weight: 900;
     cursor: pointer;
     text-transform: uppercase;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
 }
 
 .primary-btn {
-    background: var(--primary);
-    color: var(--bg-dark);
+    background: var(--grad-divine);
+    background-size: 200% auto;
+    color: #050a15;
+    animation: flow-grad 3s linear infinite;
+    border: none;
+    box-shadow: 0 0 25px rgba(0, 242, 255, 0.6);
 }
 
 .primary-btn:hover {
-    transform: scale(1.05);
-    box-shadow: var(--glow-blue);
+    transform: scale(1.05) translateY(-5px);
+    box-shadow: 0 0 40px var(--primary);
+    filter: brightness(1.2);
+}
+
+.primary-btn:active {
+    transform: scale(0.95);
 }
 
 #close-panel {
@@ -267,13 +460,13 @@ body {
 
 /* 20 Divine Artifact CSS Objects - Color-Flexible */
 .artifact-icon {
-    width: 30px;
-    height: 30px;
+    width: 35px;
+    height: 35px;
     display: inline-block;
     position: relative;
     border-radius: 50%;
     --a-color: var(--primary);
-    /* Customizable via JS */
+    filter: drop-shadow(0 0 10px var(--a-color));
 }
 
 .gold-orb {
@@ -475,9 +668,192 @@ body {
     }
 }
 
+/* 26 God-Tier Visual Tiers for Scores */
+[class^="tier-"] {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.tier-1 {
+    color: #fff;
+    text-shadow: 0 0 5px #fff;
+}
+
+.tier-2 {
+    color: #00f2ff;
+    text-shadow: 0 0 8px #00f2ff;
+}
+
+.tier-3 {
+    color: #00ff88;
+    text-shadow: 0 0 10px #00ff88;
+}
+
+.tier-4 {
+    color: #ffd700;
+    text-shadow: 0 0 12px #ffd700;
+}
+
+.tier-5 {
+    color: #ff00ff;
+    text-shadow: 0 0 15px #ff00ff;
+}
+
+.tier-6 {
+    color: #ff4400;
+    text-shadow: 0 0 18px #ff4400;
+}
+
+.tier-7 {
+    color: #0088ff;
+    text-shadow: 0 0 20px #0088ff;
+    font-size: 1.1em;
+}
+
+.tier-8 {
+    color: #ff0066;
+    text-shadow: 0 0 22px #ff0066;
+    font-size: 1.15em;
+}
+
+.tier-9 {
+    color: #88ff00;
+    text-shadow: 0 0 25px #88ff00;
+    font-style: italic;
+}
+
+.tier-10 {
+    color: cyan;
+    text-shadow: 0 0 30px cyan, 0 0 60px cyan;
+}
+
+.tier-11 {
+    color: #fff;
+    background: linear-gradient(to bottom, #fff, #00f2ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.tier-12 {
+    color: #fff;
+    background: linear-gradient(to bottom, #ffd700, #ff4400);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.tier-13 {
+    color: #fff;
+    text-shadow: 0 0 5px #fff, 0 0 15px #00f2ff;
+    animation: pulse-simple 1s infinite;
+}
+
+.tier-14 {
+    color: #ffd700;
+    text-shadow: 0 0 10px #ffd700;
+    font-size: 1.3em;
+    letter-spacing: 2px;
+}
+
+.tier-15 {
+    color: #ff00ff;
+    text-shadow: 0 0 20px #ff00ff, 0 0 40px #ff00ff;
+}
+
+.tier-16 {
+    color: #fff;
+    text-shadow: 2px 2px 0 #00f2ff, -2px -2px 0 #ff00ff;
+}
+
+.tier-17 {
+    color: #00f2ff;
+    font-size: 1.5em;
+    text-decoration: underline;
+}
+
+.tier-18 {
+    color: #fff;
+    background: radial-gradient(circle, #fff, #888);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.tier-19 {
+    color: #ff0000;
+    text-shadow: 0 0 10px #ff0000, 0 0 30px #ff0000;
+    font-weight: 100;
+}
+
+.tier-20 {
+    color: #fff;
+    border: 1px solid #00f2ff;
+    padding: 2px 5px;
+}
+
+.tier-21 {
+    color: #000;
+    background: #fff;
+    padding: 0 5px;
+}
+
+.tier-22 {
+    color: #ffd700;
+    font-size: 2em;
+    transform: scale(1.1);
+}
+
+.tier-23 {
+    color: #fff;
+    text-shadow: 0 0 50px #fff;
+    opacity: 0.8;
+}
+
+.tier-24 {
+    color: #ff00ff;
+    animation: rotate 2s infinite;
+    display: inline-block;
+}
+
+.tier-25 {
+    color: #00f2ff;
+    background: var(--grad-divine);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 2.5em;
+}
+
+.tier-26 {
+    color: #fff;
+    text-shadow: 0 0 10px #fff, 0 0 30px #ffd700, 0 0 60px #ff00ff, 0 0 90px #00f2ff;
+    font-size: 3em;
+}
+
+/* Dynamic Slot Lighting */
+.slot-glow-cyan {
+    box-shadow: 0 -10px 30px rgba(0, 242, 255, 0.5);
+}
+
+.slot-glow-gold {
+    box-shadow: 0 -10px 30px rgba(255, 215, 0, 0.5);
+}
+
+.slot-glow-magenta {
+    box-shadow: 0 -10px 30px rgba(255, 0, 255, 0.5);
+}
+
+.slot-glow-white {
+    box-shadow: 0 -10px 30px rgba(255, 255, 255, 0.5);
+}
+
 /* Mobile */
 @media (max-width: 600px) {
-    --side-panel-width: 100vw;
+    :root {
+        --side-panel-width: 100vw;
+    }
 
     #juice-tooltip {
         display: none;
