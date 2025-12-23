@@ -20,24 +20,46 @@
         <!-- PixiJS will append its canvas here -->
 
         <div id="ui-overlay">
-            <div id="currency-display">
-                <span class="label">GOLD:</span>
-                <span id="gold-amount">0</span>
+            <!-- Currency Pool (Top Right) -->
+            <div id="currency-container">
+                <div id="main-gold-display">
+                    <span class="artifact-icon gold-orb"></span>
+                    <span id="gold-amount">0</span>
+                </div>
+                <!-- Dynamic Divine Artifacts will be appended here -->
+                <div id="artifact-slots"></div>
             </div>
 
-            <div id="upgrade-menu" class="hidden">
-                <div class="menu-header">
-                    <h2>UPGRADES</h2>
-                    <button id="close-menu">X</button>
+            <button id="menu-toggle-btn" class="secondary-btn">DIVINE UPGRADES</button>
+
+            <!-- Full Height Side Panel -->
+            <div id="upgrade-panel" class="side-panel hidden">
+                <div class="panel-header">
+                    <h2>ARTIFACT UPGRADES</h2>
+                    <button id="close-panel">CLOSE</button>
                 </div>
-                <div class="upgrade-list">
-                    <!-- Upgrades will be populated here -->
+                <div class="upgrade-list-scroll">
+                    <div id="upgrade-items-container">
+                        <!-- 50 Upgrades populated by JS -->
+                    </div>
                 </div>
             </div>
 
-            <div id="controls">
-                <button id="drop-ball-btn" class="primary-btn">DROP BALL</button>
-                <button id="menu-toggle-btn" class="secondary-btn">UPGRADES</button>
+            <!-- Hyper Juice Tooltip Connector -->
+            <div id="juice-tooltip" class="hidden">
+                <div class="tooltip-connector"></div>
+                <div class="tooltip-content">
+                    <h4 id="tooltip-name">Upgrade Name</h4>
+                    <p id="tooltip-desc">Description of the divine power.</p>
+                    <div class="tooltip-stats">
+                        <span id="tooltip-level">LVL 0</span>
+                        <span id="tooltip-cost">100 G</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="bottom-controls">
+                <button id="drop-ball-btn" class="primary-btn">DIVINE DROP</button>
             </div>
         </div>
     </div>

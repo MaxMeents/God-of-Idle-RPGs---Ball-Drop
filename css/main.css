@@ -1,18 +1,13 @@
 :root {
-    --bg-dark: #0a0a0f;
-    --bg-card: rgba(20, 20, 30, 0.8);
-    /* Divine/Celestial Palette */
-    --primary: #00f2ff;
-    /* Celestial Blue */
-    --secondary: #ffffff;
-    /* Pure White */
-    --accent: #ffd700;
-    /* Divine Gold */
     --bg-dark: #050a15;
-    /* Deep Space Blue */
-    --text-glow: 0 0 10px rgba(0, 242, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.5);
-    --btn-bg: linear-gradient(135deg, #00f2ff, #ffffff);
-    --panel-bg: rgba(5, 15, 30, 0.9);
+    --panel-bg: rgba(5, 15, 30, 0.95);
+    --primary: #00f2ff;
+    --secondary: #ffffff;
+    --accent: #ffd700;
+    --text: #ffffff;
+    --glow-blue: 0 0 15px rgba(0, 242, 255, 0.6);
+    --glow-gold: 0 0 20px rgba(255, 215, 0, 0.4);
+    --side-panel-width: 400px;
 }
 
 * {
@@ -27,22 +22,12 @@ body {
     font-family: 'Exo 2', sans-serif;
     overflow: hidden;
     height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
 #game-container {
     position: relative;
     width: 100vw;
     height: 100vh;
-    background-color: var(--bg-dark);
-}
-
-#game-canvas {
-    width: 100%;
-    height: 100%;
-    display: block;
 }
 
 #ui-overlay {
@@ -59,152 +44,444 @@ body {
     pointer-events: auto;
 }
 
-#currency-display {
+/* Currency Container */
+#currency-container {
     position: absolute;
     top: 20px;
     right: 20px;
-    background: var(--bg-card);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    z-index: 100;
+}
+
+#main-gold-display {
+    background: var(--panel-bg);
     padding: 10px 20px;
-    border-radius: 12px;
+    border-radius: 30px;
     border: 1px solid var(--primary);
-    box-shadow: var(--glow-primary);
+    box-shadow: var(--glow-blue);
+    display: flex;
+    align-items: center;
+    gap: 15px;
     font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+}
+
+#artifact-slots {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+}
+
+/* Side Panel */
+.side-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: var(--side-panel-width);
+    height: 100vh;
+    background: var(--panel-bg);
+    border-left: 2px solid var(--primary);
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    z-index: 200;
+}
+
+.side-panel.hidden {
+    transform: translateX(100%);
+}
+
+.panel-header {
+    padding: 30px;
+    border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-header h2 {
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 3px;
+    color: var(--primary);
     font-size: 1.2rem;
 }
 
-#currency-display .label {
-    color: var(--gold);
-    margin-right: 10px;
+.upgrade-list-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
 }
 
-#controls {
-    position: absolute;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 20px;
+.upgrade-list-scroll::-webkit-scrollbar {
+    width: 4px;
 }
 
-.primary-btn,
-.secondary-btn {
-    padding: 12px 30px;
-    border: none;
-    border-radius: 8px;
-    font-family: 'Orbitron', sans-serif;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.primary-btn {
-    background: linear-gradient(45deg, var(--primary), var(--secondary));
-    color: white;
-    box-shadow: var(--glow-primary);
-}
-
-.primary-btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 0 20px var(--primary);
-}
-
-.primary-btn:active {
-    transform: scale(0.95);
-}
-
-.secondary-btn {
-    background: var(--bg-card);
-    color: var(--primary);
-    border: 1px solid var(--primary);
-}
-
-.secondary-btn:hover {
-    background: rgba(0, 242, 255, 0.1);
-    transform: translateY(-5px);
-}
-
-#upgrade-menu {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 400px;
-    max-height: 80vh;
-    background: var(--bg-card);
-    backdrop-filter: blur(10px);
-    border: 2px solid var(--secondary);
-    border-radius: 20px;
-    padding: 30px;
-    box-shadow: var(--glow-secondary);
-    display: flex;
-    flex-direction: column;
-    transition: opacity 0.3s ease;
-}
-
-.hidden {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-}
-
-.menu-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    font-family: 'Orbitron', sans-serif;
-}
-
-#close-menu {
-    background: none;
-    border: none;
-    color: var(--accent);
-    font-size: 1.5rem;
-    cursor: pointer;
+.upgrade-list-scroll::-webkit-scrollbar-thumb {
+    background: var(--primary);
 }
 
 .upgrade-item {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    margin-bottom: 15px;
     padding: 15px;
-    margin-bottom: 10px;
+    border-radius: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border: 1px solid transparent;
-    transition: all 0.2s;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s;
+    cursor: pointer;
+    position: relative;
 }
 
 .upgrade-item:hover {
+    background: rgba(0, 242, 255, 0.1);
     border-color: var(--primary);
-    background: rgba(255, 255, 255, 0.1);
 }
 
 .upgrade-info h3 {
     font-size: 0.9rem;
-    color: var(--primary);
-    margin-bottom: 4px;
+    color: var(--secondary);
+    margin-bottom: 5px;
 }
 
-.upgrade-info p {
-    font-size: 0.8rem;
-    opacity: 0.7;
+/* Hyper Juice Tooltip */
+#juice-tooltip {
+    position: absolute;
+    right: calc(var(--side-panel-width) + 20px);
+    width: 250px;
+    background: var(--panel-bg);
+    border: 1px solid var(--primary);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 0 40px rgba(0, 242, 255, 0.4);
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 300;
 }
 
-.buy-btn {
-    background: var(--secondary);
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 6px;
+#juice-tooltip.hidden {
+    opacity: 0;
+    transform: scale(0.9);
+}
+
+.tooltip-connector {
+    position: absolute;
+    top: 50%;
+    right: -21px;
+    width: 20px;
+    height: 1px;
+    background: var(--primary);
+}
+
+.tooltip-connector::after {
+    content: '';
+    position: absolute;
+    right: -2px;
+    top: -2px;
+    width: 5px;
+    height: 5px;
+    background: var(--primary);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--primary);
+}
+
+.tooltip-content h4 {
     font-family: 'Orbitron', sans-serif;
-    font-size: 0.8rem;
-    cursor: pointer;
+    color: var(--primary);
+    margin-bottom: 10px;
 }
 
-.buy-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
+.tooltip-content p {
+    font-size: 0.85rem;
+    opacity: 0.8;
+    line-height: 1.4;
+}
+
+.tooltip-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    font-weight: bold;
+    color: var(--accent);
+}
+
+/* Controls */
+#menu-toggle-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+}
+
+#bottom-controls {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 250px;
+}
+
+.primary-btn,
+.secondary-btn {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid var(--primary);
+    border-radius: 12px;
+    background: var(--panel-bg);
+    color: var(--primary);
+    font-family: 'Orbitron', sans-serif;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.primary-btn {
+    background: var(--primary);
+    color: var(--bg-dark);
+}
+
+.primary-btn:hover {
+    transform: scale(1.05);
+    box-shadow: var(--glow-blue);
+}
+
+#close-panel {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-family: 'Orbitron';
+    font-size: 0.8rem;
+    opacity: 0.5;
+}
+
+#close-panel:hover {
+    opacity: 1;
+}
+
+/* 20 Divine Artifact CSS Objects - Color-Flexible */
+.artifact-icon {
+    width: 30px;
+    height: 30px;
+    display: inline-block;
+    position: relative;
+    border-radius: 50%;
+    --a-color: var(--primary);
+    /* Customizable via JS */
+}
+
+.gold-orb {
+    background: radial-gradient(circle, #fff, #ffd700);
+    box-shadow: 0 0 15px #ffd700;
+    animation: pulse 2s infinite;
+}
+
+/* 1. Star Scepter */
+.artifact-1 {
+    background: var(--a-color);
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    box-shadow: 0 0 15px var(--a-color);
+}
+
+/* 2. Moon Tear */
+.artifact-2 {
+    background: var(--a-color);
+    border-radius: 0 100% 100% 100%;
+    transform: rotate(45deg);
+    box-shadow: 2px 2px 10px var(--a-color);
+}
+
+/* 3. Solar Disc */
+.artifact-3 {
+    background: var(--a-color);
+    border: 2px double #fff;
+    box-shadow: inset 0 0 10px #fff, 0 0 15px var(--a-color);
+}
+
+/* 4. Plasma Prism */
+.artifact-4 {
+    background: linear-gradient(135deg, var(--a-color), #fff);
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    animation: rotate 4s linear infinite;
+}
+
+/* 5. Emerald Heart */
+.artifact-5 {
+    background: var(--a-color);
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+    box-shadow: 0 0 20px var(--a-color);
+}
+
+/* 6. Crimson Eye */
+.artifact-6 {
+    background: var(--a-color);
+    height: 15px;
+    border-radius: 50% / 100%;
+    box-shadow: 0 0 15px var(--a-color);
+    margin-top: 7px;
+    border: 1px solid #fff;
+}
+
+/* 7. Golden Wing */
+.artifact-7 {
+    background: var(--a-color);
+    clip-path: polygon(0 0, 100% 0, 80% 100%, 0 100%);
+    transform: skewX(-15deg);
+    box-shadow: -5px 0 10px var(--a-color);
+}
+
+/* 8. Void Pearl */
+.artifact-8 {
+    background: #000;
+    border: 3px solid var(--a-color);
+    box-shadow: inset 0 0 10px var(--a-color), 0 0 15px var(--a-color);
+}
+
+/* 9. Lightning Bolt */
+.artifact-9 {
+    background: var(--a-color);
+    clip-path: polygon(40% 0, 100% 0, 60% 40%, 90% 40%, 0 100%, 30% 50%, 10% 50%);
+    filter: drop-shadow(0 0 5px var(--a-color));
+}
+
+/* 10. Crystal Lotus */
+.artifact-10 {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid var(--a-color);
+    border-radius: 50% 0 50% 0;
+    box-shadow: 0 0 10px var(--a-color);
+    transform: rotate(-45deg);
+}
+
+/* 11. Phoenix Feather */
+.artifact-11 {
+    background: linear-gradient(var(--a-color), transparent);
+    border-radius: 100% 0 0 0;
+    transform: rotate(-20deg);
+}
+
+/* 12. Ocean Shield */
+.artifact-12 {
+    background: var(--a-color);
+    border-radius: 0 0 50% 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 5px 15px var(--a-color);
+}
+
+/* 13. Gravity Core */
+.artifact-13 {
+    background: #000;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    box-shadow: 0 0 20px 8px var(--a-color);
+    left: 9px;
+    top: 9px;
+}
+
+/* 14. Ethereal Rose */
+.artifact-14 {
+    background: var(--a-color);
+    border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+    animation: pulse 3s infinite;
+}
+
+/* 15. Diamond Spike */
+.artifact-15 {
+    background: var(--a-color);
+    transform: rotate(45deg);
+    width: 18px;
+    height: 18px;
+    left: 6px;
+    top: 6px;
+    border: 2px solid #fff;
+}
+
+/* 16. Nebula Dust */
+.artifact-16 {
+    background: transparent;
+    box-shadow: 3px 3px 0 var(--a-color), -3px -3px 0 #fff;
+    filter: blur(1px);
+}
+
+/* 17. Chronos Gear */
+.artifact-17 {
+    background: var(--a-color);
+    clip-path: polygon(50% 0%, 65% 15%, 85% 15%, 85% 35%, 100% 50%, 85% 65%, 85% 85%, 65% 85%, 50% 100%, 35% 85%, 15% 85%, 15% 65%, 0% 50%, 15% 35%, 15% 15%, 35% 15%);
+    animation: rotate 10s linear infinite;
+}
+
+/* 18. Astral Key */
+.artifact-18 {
+    background: var(--a-color);
+    width: 6px;
+    height: 26px;
+    left: 12px;
+    border-bottom: 8px double #fff;
+}
+
+/* 19. Infinity Loop */
+.artifact-19 {
+    border: 4px solid var(--a-color);
+    height: 12px;
+    border-radius: 12px;
+    width: 28px;
+    top: 9px;
+    box-shadow: 0 0 10px var(--a-color);
+}
+
+/* 20. God Seal */
+.artifact-20 {
+    background: #fff;
+    border: 3px solid var(--a-color);
+    transform: rotate(45deg);
+    height: 26px;
+    width: 26px;
+    left: 2px;
+    top: 2px;
+    box-shadow: 0 0 20px var(--a-color);
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.8;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    100% {
+        opacity: 0.8;
+        transform: scale(1);
+    }
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+    --side-panel-width: 100vw;
+
+    #juice-tooltip {
+        display: none;
+    }
+
+    /* Tooltips hidden on mobile for clarity */
 }

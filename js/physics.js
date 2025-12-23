@@ -140,14 +140,14 @@ const Physics = {
             (bodyA.label === 'pin' && bodyB.label === 'ball')) {
             const ball = bodyA.label === 'ball' ? bodyA : bodyB;
 
+            // Trigger UI logic for pin hit (passive gold)
+            UI.handleCollision();
+
             // Extreme Throttling of VFX for 10k balls
             if (this.balls.length < 500) {
                 Juice.createCollisionParticles(ball.position.x, ball.position.y);
                 Renderer.createPulse(ball.position.x, ball.position.y, 0x00f2ff);
             }
-
-            const pinUpg = UI.upgrades.find(u => u.id === 'pin_mult');
-            if (pinUpg.level > 0) UI.updateGold(pinUpg.level * 0.1);
         }
 
         const ball = bodyA.label === 'ball' ? bodyA : (bodyB.label === 'ball' ? bodyB : null);
@@ -158,7 +158,7 @@ const Physics = {
             const goldEarned = UI.handleScore(slotIndex);
 
             if (this.balls.length < 500) {
-                Juice.createScorePopup(ball.position.x, ball.position.y, `+${goldEarned.toFixed(1)}`);
+                Juice.createScorePopup(ball.position.x, ball.position.y, `+${Math.floor(goldEarned)}`);
                 Renderer.createPulse(ball.position.x, ball.position.y, 0xffffff);
             }
 

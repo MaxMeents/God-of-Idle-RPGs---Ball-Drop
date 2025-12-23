@@ -40,7 +40,25 @@ const Renderer = {
         this.setupBackground();
         this.setupFilters();
 
-        console.log("Renderer Optimized for 10,000+ Orbs");
+        // Mobile: Resize Handler
+        window.addEventListener('resize', () => this.resize());
+        this.resize();
+
+        console.log("Renderer Optimized for 10,000+ Orbs & Mobile friendly");
+    },
+
+    resize() {
+        const container = document.getElementById('game-container');
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+
+        this.app.renderer.resize(width, height);
+
+        // Mobile-specific adjustments
+        const isMobile = width < 600;
+        if (this.filters.bloom) {
+            this.filters.bloom.enabled = !isMobile || width > 400; // Disable filter on very small screens for performance
+        }
     },
 
     generateTextures() {
