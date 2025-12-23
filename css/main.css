@@ -1,13 +1,18 @@
 :root {
     --bg-dark: #0a0a0f;
     --bg-card: rgba(20, 20, 30, 0.8);
+    /* Divine/Celestial Palette */
     --primary: #00f2ff;
-    --secondary: #7000ff;
-    --accent: #ff007a;
-    --text: #e0e0e0;
-    --gold: #ffd700;
-    --glow-primary: 0 0 10px rgba(0, 242, 255, 0.5);
-    --glow-secondary: 0 0 10px rgba(112, 0, 255, 0.5);
+    /* Celestial Blue */
+    --secondary: #ffffff;
+    /* Pure White */
+    --accent: #ffd700;
+    /* Divine Gold */
+    --bg-dark: #050a15;
+    /* Deep Space Blue */
+    --text-glow: 0 0 10px rgba(0, 242, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.5);
+    --btn-bg: linear-gradient(135deg, #00f2ff, #ffffff);
+    --panel-bg: rgba(5, 15, 30, 0.9);
 }
 
 * {
@@ -31,8 +36,7 @@ body {
     position: relative;
     width: 100vw;
     height: 100vh;
-    background: url('../img/bg.png') no-repeat center center;
-    background-size: cover;
+    background-color: var(--bg-dark);
 }
 
 #game-canvas {

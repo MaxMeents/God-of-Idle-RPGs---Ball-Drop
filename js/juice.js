@@ -15,12 +15,13 @@ const Juice = {
         this.shakeIntensity = Math.max(this.shakeIntensity, intensity);
     },
 
-    createCollisionParticles(x, y, color = 0x00f2ff) {
-        const count = 10 + Math.random() * 10;
+    createCollisionParticles(x, y, color = 0xffffff) {
+        const count = 15 + Math.random() * 10;
         for (let i = 0; i < count; i++) {
             const p = new PIXI.Graphics();
-            p.beginFill(color);
-            p.drawCircle(0, 0, 2 + Math.random() * 3);
+            const pColor = Math.random() > 0.5 ? 0xffffff : 0x00f2ff;
+            p.beginFill(pColor);
+            p.drawCircle(0, 0, 1.5 + Math.random() * 2);
             p.endFill();
 
             p.x = x;
@@ -42,15 +43,15 @@ const Juice = {
     createScorePopup(x, y, text) {
         const style = new PIXI.TextStyle({
             fontFamily: 'Orbitron',
-            fontSize: 24,
+            fontSize: 22,
             fontWeight: 'bold',
-            fill: '#ffd700',
-            stroke: '#000000',
-            strokeThickness: 4,
+            fill: ['#ffffff', '#00f2ff'], // Divine gradient
+            stroke: '#050a15',
+            strokeThickness: 5,
             dropShadow: true,
-            dropShadowColor: '#000000',
-            dropShadowBlur: 4,
-            dropShadowDistance: 2
+            dropShadowColor: '#00f2ff',
+            dropShadowBlur: 8,
+            dropShadowDistance: 0
         });
 
         const popup = new PIXI.Text(text, style);
